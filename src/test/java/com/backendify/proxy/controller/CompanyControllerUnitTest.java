@@ -1,5 +1,7 @@
-package com.backendify.proxy;
+package com.backendify.proxy.controller;
 
+import com.backendify.proxy.model.CompanyResponse;
+import com.backendify.proxy.service.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

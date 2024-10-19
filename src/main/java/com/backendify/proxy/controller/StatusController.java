@@ -1,4 +1,4 @@
-package com.backendify.proxy;
+package com.backendify.proxy.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
