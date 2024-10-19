@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.5'
+    id 'io.spring.dependency-management' version '1.0.14.RELEASE'
+}
+
+group = 'com.backendify'
+version = '1.0.0'
+sourceCompatibility = '17'  // Set to Java 17
+targetCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Web dependency for REST APIs
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Boot Test dependency for testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = 'backendify-proxy-service.jar'
+}
+
+
+
