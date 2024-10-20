@@ -1,9 +1,6 @@
 package com.backendify.proxy.service;
 
-import com.backendify.proxy.exception.BackendResponseFormatException;
-import com.backendify.proxy.exception.BackendServerException;
-import com.backendify.proxy.exception.CompanyNotFoundException;
-import com.backendify.proxy.exception.UnexpectedContentTypeException;
+import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.model.CompanyV1Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -32,7 +30,7 @@ public class CompanyService {
         this.objectMapper = objectMapper;
     }
 
-    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
 
         try {
             // Return the URL based on the country ISO code
@@ -59,6 +57,8 @@ public class CompanyService {
             throw new CompanyNotFoundException("Company not found");
         } catch (HttpServerErrorException e) {
             throw new BackendServerException("Backend server error: " + e.getStatusCode(), e);
+        } catch (ResourceAccessException e) {
+            throw new ConnectivityTimeoutException("Timeout or connectivity issue with backend: " + e.getMessage(), e);
         }
 
     }

@@ -1,9 +1,6 @@
 package com.backendify.proxy.controller;
 
-import com.backendify.proxy.exception.BackendResponseFormatException;
-import com.backendify.proxy.exception.BackendServerException;
-import com.backendify.proxy.exception.CompanyNotFoundException;
-import com.backendify.proxy.exception.UnexpectedContentTypeException;
+import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +20,7 @@ public class CompanyController {
     }
 
     @GetMapping ("/company")
-    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
         CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
         return ResponseEntity.ok(companyResponse);
     }

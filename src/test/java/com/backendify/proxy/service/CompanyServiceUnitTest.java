@@ -1,9 +1,6 @@
 package com.backendify.proxy.service;
 
-import com.backendify.proxy.exception.BackendResponseFormatException;
-import com.backendify.proxy.exception.BackendServerException;
-import com.backendify.proxy.exception.CompanyNotFoundException;
-import com.backendify.proxy.exception.UnexpectedContentTypeException;
+import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +28,7 @@ public class CompanyServiceUnitTest {
     private RestTemplate restTemplate;
 
     @Test
-    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Company V1\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -50,7 +48,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -103,7 +101,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2022-01-28T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -124,7 +122,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -144,7 +142,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
+    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2025-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -176,24 +174,38 @@ public class CompanyServiceUnitTest {
         ResponseEntity<String> responseEntity = new ResponseEntity<>(v1ResponseBody, headers, HttpStatus.OK);
         when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
 
-        // Expect a RuntimeException due to unsupported content type
+        // Expect a custom Exception due to unsupported content type
         assertThrows(BackendResponseFormatException.class, () -> {
             companyService.getCompany("123", "us");
         });
     }
 
     @Test
-    public void whenBackendServerError_thenThrowException() {
+    public void whenBackendServerError_thenThrowAppropriateException() {
         // Simulate a server error (5xx)
         when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class)))
                 .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
-        // Expect a RuntimeException after retries
+        // Expect a custom Exception
         BackendServerException exception = assertThrows(BackendServerException.class, () -> {
             companyService.getCompany("123", "us");
         });
 
         assertEquals("Backend server error: 500 INTERNAL_SERVER_ERROR", exception.getMessage());
+    }
+
+    @Test
+    public void whenBackendTimesOut_thenThrowAppropriateException() {
+        // Simulate a timeout (ResourceAccessException)
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class)))
+                .thenThrow(new ResourceAccessException("Backend timed out"));
+
+        // Expect a custom Exception
+        ConnectivityTimeoutException exception = assertThrows(ConnectivityTimeoutException.class, () -> {
+            companyService.getCompany("123", "us");
+        });
+
+        assertEquals("Timeout or connectivity issue with backend: Backend timed out", exception.getMessage());
     }
 
 }
