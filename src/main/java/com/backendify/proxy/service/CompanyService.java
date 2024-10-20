@@ -28,15 +28,18 @@ public class CompanyService {
         String body = response.getBody();
         HttpHeaders headers = response.getHeaders();
 
-        String contentType = headers.getContentType().toString();
+        if (headers.getContentType() != null) {
+            String contentType = headers.getContentType().toString();
 
-        if ("application/x-company-v1".equals(contentType)) {
-            return parseV1Response(id, body);
-        } else if ("application/x-company-v2".equals(contentType)) {
-            return parseV2Response(id, body);
-        } else {
-            throw new UnexpectedContentTypeException("Unsupported backend response type");
+            if ("application/x-company-v1".equals(contentType)) {
+                return parseV1Response(id, body);
+            } else if ("application/x-company-v2".equals(contentType)) {
+                return parseV2Response(id, body);
+            } else {
+                throw new UnexpectedContentTypeException("Unsupported backend response type");
+            }
         }
+        throw new IllegalStateException("Content Type is null");
     }
 
     private CompanyResponse parseV1Response(String id, String body) {
