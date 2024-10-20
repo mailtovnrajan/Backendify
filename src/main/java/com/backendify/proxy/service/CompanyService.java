@@ -1,5 +1,6 @@
 package com.backendify.proxy.service;
 
+import com.backendify.proxy.exception.BackendResponseFormatException;
 import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.model.CompanyV1Response;
@@ -27,7 +28,7 @@ public class CompanyService {
         this.objectMapper = objectMapper;
     }
 
-    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, JsonProcessingException {
+    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException {
         // Return the URL based on the country ISO code
         String backendUrl = "http://localhost:8080/companies/" + id;
 
@@ -50,14 +51,19 @@ public class CompanyService {
         throw new IllegalStateException("Content Type is null");
     }
 
-    private CompanyResponse parseV1Response(String id, String body) throws JsonProcessingException {
-            CompanyV1Response v1Response =  objectMapper.readValue(body, CompanyV1Response.class);;
+    private CompanyResponse parseV1Response(String id, String body) throws BackendResponseFormatException {
+        try {
+            CompanyV1Response v1Response = objectMapper.readValue(body, CompanyV1Response.class);
+            ;
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
             String closedOn = v1Response.getClosedOn();
             boolean active = isActive(closedOn);
 
             return new CompanyResponse(id, name, active, closedOn);
+        } catch(JsonProcessingException jpe) {
+            throw new BackendResponseFormatException(jpe);
+        }
     }
 
     private boolean isActive(String closedOn) {

@@ -1,5 +1,6 @@
 package com.backendify.proxy.service;
 
+import com.backendify.proxy.exception.BackendResponseFormatException;
 import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ public class CompanyServiceUnitTest {
     private RestTemplate restTemplate;
 
     @Test
-    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException {
+    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Company V1\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -46,7 +47,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException {
+    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -85,11 +86,11 @@ public class CompanyServiceUnitTest {
     @Test
     public void whenContentTypeIsNull_thenThrowException() {
         // Simulate unsupported content type response
-        String unsupportedResponseBody = "{}";
+        String v1ResponseBody = "{\"cn\": \"Company V1\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
 
         // Mock the RestTemplate to return an unsupported content type response
-        ResponseEntity<String> responseEntity = new ResponseEntity<>(unsupportedResponseBody, headers, HttpStatus.OK);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(v1ResponseBody, headers, HttpStatus.OK);
         when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
 
         // Expect a RuntimeException due to unsupported content type
@@ -99,7 +100,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException {
+    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2022-01-28T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -120,7 +121,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException {
+    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -140,7 +141,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException {
+    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2025-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -159,6 +160,23 @@ public class CompanyServiceUnitTest {
         assertTrue(companyResponse.isActive());
         assertEquals("2025-01-01T00:00:00Z", companyResponse.getActiveUntil());
 
+    }
+
+    @Test
+    public void whenMalformedJson_thenThrowAppropriateException() {
+        // Simulate unsupported content type response
+        String v1ResponseBody = "{\"malformed_json\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("application/x-company-v1"));
+
+        // Mock the RestTemplate to return an unsupported content type response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(v1ResponseBody, headers, HttpStatus.OK);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // Expect a RuntimeException due to unsupported content type
+        assertThrows(BackendResponseFormatException.class, () -> {
+            companyService.getCompany("123", "us");
+        });
     }
 
 }
