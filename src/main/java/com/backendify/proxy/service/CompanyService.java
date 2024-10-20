@@ -2,6 +2,7 @@ package com.backendify.proxy.service;
 
 import com.backendify.proxy.model.CompanyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -24,12 +25,27 @@ public class CompanyService {
         // Call the backend service using RestTemplate
         ResponseEntity<String> response = restTemplate.getForEntity(backendUrl, String.class);
         String body = response.getBody();
-        return parseV1Response(body);
+        HttpHeaders headers = response.getHeaders();
+
+        String contentType = headers.getContentType().toString();
+
+        if ("application/x-company-v1".equals(contentType)) {
+            return parseV1Response(id, body);
+        } else if ("application/x-company-v2".equals(contentType)) {
+            return parseV2Response(id, body);
+        } else {
+            throw new RuntimeException("Unsupported backend response type");
+        }
     }
 
-    private CompanyResponse parseV1Response(String body) {
+    private CompanyResponse parseV1Response(String id, String body) {
         // Logic for parsing V1 backend response
-        return new CompanyResponse("123", "Company V1", true, null);
+        return new CompanyResponse(id, "Company V1", true, null);
+    }
+
+    private CompanyResponse parseV2Response(String id, String body) {
+        // Logic for parsing V2 backend response
+        return new CompanyResponse(id, "Company V2", true, null);
     }
 
 }

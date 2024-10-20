@@ -64,4 +64,20 @@ public class CompanyServiceUnitTest {
         assertTrue(companyResponse.isActive());
     }
 
+    @Test
+    public void whenUnExpectedContentType_thenThrowException() {
+        // Simulate unsupported content type response
+        String unsupportedResponseBody = "{}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("application/unsupported"));
+
+        // Mock the RestTemplate to return an unsupported content type response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(unsupportedResponseBody, headers, HttpStatus.OK);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // Expect a RuntimeException due to unsupported content type
+        assertThrows(RuntimeException.class, () -> {
+            companyService.getCompany("123", "us");
+        });
+    }
 }
