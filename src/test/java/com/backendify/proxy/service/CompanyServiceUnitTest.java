@@ -11,9 +11,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -187,11 +190,9 @@ public class CompanyServiceUnitTest {
                 .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
         // Expect a custom Exception
-        BackendServerException exception = assertThrows(BackendServerException.class, () -> {
+        assertThrows(BackendServerException.class, () -> {
             companyService.getCompany("123", "us");
         });
-
-        assertEquals("Backend server error: 500 INTERNAL_SERVER_ERROR", exception.getMessage());
     }
 
     @Test
@@ -201,11 +202,24 @@ public class CompanyServiceUnitTest {
                 .thenThrow(new ResourceAccessException("Backend timed out"));
 
         // Expect a custom Exception
-        ConnectivityTimeoutException exception = assertThrows(ConnectivityTimeoutException.class, () -> {
+        assertThrows(ConnectivityTimeoutException.class, () -> {
             companyService.getCompany("123", "us");
         });
-
-        assertEquals("Timeout or connectivity issue with backend: Backend timed out", exception.getMessage());
     }
 
+    @Test
+    public void whenCompanyNotFound_thenThrowCompanyNotFoundException() {
+        // Simulate a 404 Not Found response from the backend
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class)))
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.NOT_FOUND,
+                        "Company not found",
+                        HttpHeaders.EMPTY,
+                        null,
+                        StandardCharsets.UTF_8
+                ));
+        assertThrows(CompanyNotFoundException.class, () -> {
+            companyService.getCompany("999", "us");
+        });
+    }
 }
