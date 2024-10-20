@@ -139,4 +139,26 @@ public class CompanyServiceUnitTest {
         assertTrue(companyResponse.isActive());
     }
 
+    @Test
+    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException {
+        // Simulate V1 backend response
+        String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2025-01-01T00:00:00Z\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("application/x-company-v1"));
+
+        // Mock the RestTemplate to return a V1 response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(v1ResponseBody, headers, HttpStatus.OK);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // Call the service method
+        CompanyResponse companyResponse = companyService.getCompany("Backendify", "us");
+
+        // Verify the service's response
+        assertEquals("Backendify", companyResponse.getId());
+        assertEquals("Backendify Ltd", companyResponse.getName());
+        assertTrue(companyResponse.isActive());
+        assertEquals("2025-01-01T00:00:00Z", companyResponse.getActiveUntil());
+
+    }
+
 }

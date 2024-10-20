@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Service
 public class CompanyService {
 
@@ -53,12 +56,22 @@ public class CompanyService {
             CompanyV1Response v1Response =  objectMapper.readValue(body, CompanyV1Response.class);;
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
-            String activeUntil = v1Response.getClosedOn();
-            boolean active = (activeUntil == null);
-            return new CompanyResponse(id, name, active, activeUntil);
+            String closedOn = v1Response.getClosedOn();
+            boolean active = isActive(closedOn);
+
+            return new CompanyResponse(id, name, active, closedOn);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean isActive(String closedOn) {
+        if (closedOn == null) return true;
+
+        LocalDateTime closedOnDateTime = LocalDateTime.parse(closedOn, DateTimeFormatter.ISO_DATE_TIME);
+
+        // Compare the current date with closed_on date
+        return LocalDateTime.now().isBefore(closedOnDateTime);
     }
 
     private CompanyResponse parseV2Response(String id, String body) {
