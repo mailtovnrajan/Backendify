@@ -27,7 +27,7 @@ public class CompanyService {
         this.objectMapper = objectMapper;
     }
 
-    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException {
+    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, JsonProcessingException {
         // Return the URL based on the country ISO code
         String backendUrl = "http://localhost:8080/companies/" + id;
 
@@ -50,9 +50,7 @@ public class CompanyService {
         throw new IllegalStateException("Content Type is null");
     }
 
-    private CompanyResponse parseV1Response(String id, String body) {
-
-        try {
+    private CompanyResponse parseV1Response(String id, String body) throws JsonProcessingException {
             CompanyV1Response v1Response =  objectMapper.readValue(body, CompanyV1Response.class);;
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
@@ -60,9 +58,6 @@ public class CompanyService {
             boolean active = isActive(closedOn);
 
             return new CompanyResponse(id, name, active, closedOn);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private boolean isActive(String closedOn) {

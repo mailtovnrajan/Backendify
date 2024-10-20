@@ -3,6 +3,7 @@ package com.backendify.proxy.controller;
 import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.service.CompanyService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,7 @@ public class CompanyController {
     }
 
     @GetMapping ("/company")
-    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException {
+    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, JsonProcessingException {
         CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
         return ResponseEntity.ok(companyResponse);
     }
