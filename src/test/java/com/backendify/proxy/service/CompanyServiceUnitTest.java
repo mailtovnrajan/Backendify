@@ -48,7 +48,7 @@ public class CompanyServiceUnitTest {
     @Test
     public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException {
         // Simulate V2 backend response
-        String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"123456\"}";
+        String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("application/x-company-v2"));
 
@@ -96,6 +96,26 @@ public class CompanyServiceUnitTest {
         assertThrows(IllegalStateException.class, () -> {
             companyService.getCompany("123", "us");
         });
+    }
+
+    @Test
+    public void whenCompanyIsInactive_thenParseCorrectly() throws UnexpectedContentTypeException {
+        // Simulate V1 backend response
+        String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2022-01-28T00:00:00Z\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("application/x-company-v1"));
+
+        // Mock the RestTemplate to return a V1 response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(v1ResponseBody, headers, HttpStatus.OK);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // Call the service method
+        CompanyResponse companyResponse = companyService.getCompany("Backendify", "us");
+
+        // Verify the service's response
+        assertEquals("Backendify", companyResponse.getId());
+        assertEquals("Backendify Ltd", companyResponse.getName());
+        assertFalse(companyResponse.isActive());
     }
 
 }
