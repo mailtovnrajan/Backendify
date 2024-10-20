@@ -43,4 +43,25 @@ public class CompanyServiceUnitTest {
         assertEquals("Company V1", companyResponse.getName());
         assertTrue(companyResponse.isActive());
     }
+
+    @Test
+    public void whenGetCompanyV2_thenReturnCompanyResponse() {
+        // Simulate V2 backend response
+        String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"123456\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("application/x-company-v2"));
+
+        // Mock the RestTemplate to return a V2 response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(v2ResponseBody, headers, HttpStatus.OK);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // Call the service method
+        CompanyResponse companyResponse = companyService.getCompany("123", "us");
+
+        // Verify the service's response
+        assertEquals("123", companyResponse.getId());
+        assertEquals("Company V2", companyResponse.getName());
+        assertTrue(companyResponse.isActive());
+    }
+
 }
