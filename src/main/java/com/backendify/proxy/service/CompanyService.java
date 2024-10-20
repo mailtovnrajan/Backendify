@@ -1,6 +1,7 @@
 package com.backendify.proxy.service;
 
 import com.backendify.proxy.exception.BackendResponseFormatException;
+import com.backendify.proxy.exception.CompanyNotFoundException;
 import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.model.CompanyV1Response;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -28,27 +30,32 @@ public class CompanyService {
         this.objectMapper = objectMapper;
     }
 
-    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException {
-        // Return the URL based on the country ISO code
-        String backendUrl = "http://localhost:8080/companies/" + id;
+    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
 
-        // Call the backend service using RestTemplate
-        ResponseEntity<String> response = restTemplate.getForEntity(backendUrl, String.class);
-        String body = response.getBody();
-        HttpHeaders headers = response.getHeaders();
+        try {
+            // Return the URL based on the country ISO code
+            String backendUrl = "http://localhost:8080/companies/" + id;
 
-        if (headers.getContentType() != null) {
-            String contentType = headers.getContentType().toString();
+            // Call the backend service using RestTemplate
+            ResponseEntity<String> response = restTemplate.getForEntity(backendUrl, String.class);
+            String body = response.getBody();
+            HttpHeaders headers = response.getHeaders();
 
-            if ("application/x-company-v1".equals(contentType)) {
-                return parseV1Response(id, body);
-            } else if ("application/x-company-v2".equals(contentType)) {
-                return parseV2Response(id, body);
-            } else {
-                throw new UnexpectedContentTypeException("Unsupported backend response type");
+            if (headers.getContentType() != null) {
+                String contentType = headers.getContentType().toString();
+
+                if ("application/x-company-v1".equals(contentType)) {
+                    return parseV1Response(id, body);
+                } else if ("application/x-company-v2".equals(contentType)) {
+                    return parseV2Response(id, body);
+                } else {
+                    throw new UnexpectedContentTypeException("Unsupported backend response type");
+                }
             }
+            throw new IllegalStateException("Content Type is null");
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new CompanyNotFoundException("Company not found");
         }
-        throw new IllegalStateException("Content Type is null");
     }
 
     private CompanyResponse parseV1Response(String id, String body) throws BackendResponseFormatException {

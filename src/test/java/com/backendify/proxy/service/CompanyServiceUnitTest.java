@@ -1,6 +1,7 @@
 package com.backendify.proxy.service;
 
 import com.backendify.proxy.exception.BackendResponseFormatException;
+import com.backendify.proxy.exception.CompanyNotFoundException;
 import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ public class CompanyServiceUnitTest {
     private RestTemplate restTemplate;
 
     @Test
-    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException {
+    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Company V1\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -47,7 +48,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException {
+    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -100,7 +101,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException {
+    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2022-01-28T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -121,7 +122,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException {
+    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -141,7 +142,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException {
+    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2025-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();

@@ -1,6 +1,7 @@
 package com.backendify.proxy.controller;
 
 import com.backendify.proxy.exception.BackendResponseFormatException;
+import com.backendify.proxy.exception.CompanyNotFoundException;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.service.CompanyService;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ public class CompanyControllerUnitTest {
     private CompanyService companyService;
 
     @Test
-    public void whenGetCompany_thenReturns200() throws Exception, BackendResponseFormatException {
+    public void whenGetCompany_thenReturns200() throws Exception, BackendResponseFormatException, CompanyNotFoundException {
         CompanyResponse mockResponse = new CompanyResponse("123", "Company1", true, null);
         Mockito.when(companyService.getCompany("123", "us")).thenReturn(mockResponse);
 
