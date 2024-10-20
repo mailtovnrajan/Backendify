@@ -54,8 +54,8 @@ public class CompanyService {
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
             String activeUntil = v1Response.getClosedOn();
-
-            return new CompanyResponse(id, name, false, activeUntil);
+            boolean active = (activeUntil == null);
+            return new CompanyResponse(id, name, active, activeUntil);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
