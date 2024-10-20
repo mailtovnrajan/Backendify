@@ -1,6 +1,7 @@
 package com.backendify.proxy.controller;
 
 import com.backendify.proxy.exception.BackendResponseFormatException;
+import com.backendify.proxy.exception.BackendServerException;
 import com.backendify.proxy.exception.CompanyNotFoundException;
 import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
@@ -22,7 +23,7 @@ public class CompanyController {
     }
 
     @GetMapping ("/company")
-    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException {
+    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
         CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
         return ResponseEntity.ok(companyResponse);
     }

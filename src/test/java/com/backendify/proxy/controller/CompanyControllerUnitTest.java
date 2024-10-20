@@ -1,6 +1,7 @@
 package com.backendify.proxy.controller;
 
 import com.backendify.proxy.exception.BackendResponseFormatException;
+import com.backendify.proxy.exception.BackendServerException;
 import com.backendify.proxy.exception.CompanyNotFoundException;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.service.CompanyService;
@@ -24,7 +25,7 @@ public class CompanyControllerUnitTest {
     private CompanyService companyService;
 
     @Test
-    public void whenGetCompany_thenReturns200() throws Exception, BackendResponseFormatException, CompanyNotFoundException {
+    public void whenGetCompany_thenReturns200() throws Exception, BackendResponseFormatException, CompanyNotFoundException, BackendServerException {
         CompanyResponse mockResponse = new CompanyResponse("123", "Company1", true, null);
         Mockito.when(companyService.getCompany("123", "us")).thenReturn(mockResponse);
 
