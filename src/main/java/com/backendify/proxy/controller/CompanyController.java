@@ -15,7 +15,7 @@ public class CompanyController {
     private CompanyService companyService;
 
     @GetMapping ("/company")
-    public ResponseEntity<?> getCompany(@RequestParam String id, @RequestParam String country_iso) {
+    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) {
         CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
         return ResponseEntity.ok(companyResponse);
     }
