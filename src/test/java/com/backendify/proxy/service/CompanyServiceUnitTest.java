@@ -99,7 +99,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyIsInactive_thenParseCorrectly() throws UnexpectedContentTypeException {
+    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2022-01-28T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -116,6 +116,7 @@ public class CompanyServiceUnitTest {
         assertEquals("Backendify", companyResponse.getId());
         assertEquals("Backendify Ltd", companyResponse.getName());
         assertFalse(companyResponse.isActive());
+        assertEquals("2022-01-28T00:00:00Z", companyResponse.getActiveUntil());
     }
 
 }
