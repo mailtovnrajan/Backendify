@@ -1,5 +1,6 @@
 package com.backendify.proxy.service;
 
+import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -25,7 +26,7 @@ public class CompanyServiceUnitTest {
     private RestTemplate restTemplate;
 
     @Test
-    public void whenGetCompanyV1_thenReturnCompanyResponse() {
+    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Company V1\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -45,7 +46,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenGetCompanyV2_thenReturnCompanyResponse() {
+    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"123456\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -76,7 +77,7 @@ public class CompanyServiceUnitTest {
         when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
 
         // Expect a RuntimeException due to unsupported content type
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(UnexpectedContentTypeException.class, () -> {
             companyService.getCompany("123", "us");
         });
     }

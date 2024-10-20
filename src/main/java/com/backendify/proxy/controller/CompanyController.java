@@ -1,5 +1,6 @@
 package com.backendify.proxy.controller;
 
+import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class CompanyController {
     }
 
     @GetMapping ("/company")
-    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) {
+    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException {
         CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
         return ResponseEntity.ok(companyResponse);
     }

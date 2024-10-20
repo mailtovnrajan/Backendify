@@ -1,5 +1,6 @@
 package com.backendify.proxy.service;
 
+import com.backendify.proxy.exception.UnexpectedContentTypeException;
 import com.backendify.proxy.model.CompanyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -18,7 +19,7 @@ public class CompanyService {
         this.restTemplate = restTemplate;
     }
 
-    public CompanyResponse getCompany(String id, String countryIso) {
+    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException {
         // Return the URL based on the country ISO code
         String backendUrl = "http://localhost:8080/companies/" + id;
 
@@ -34,7 +35,7 @@ public class CompanyService {
         } else if ("application/x-company-v2".equals(contentType)) {
             return parseV2Response(id, body);
         } else {
-            throw new RuntimeException("Unsupported backend response type");
+            throw new UnexpectedContentTypeException("Unsupported backend response type");
         }
     }
 
