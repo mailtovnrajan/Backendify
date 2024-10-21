@@ -1,4 +1,4 @@
-package com.backendify.proxy;
+package com.backendify.proxy.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
