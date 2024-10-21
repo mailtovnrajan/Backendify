@@ -3,6 +3,7 @@ package com.backendify.proxy.service;
 import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.model.CompanyV1Response;
+import com.backendify.proxy.model.CompanyV2Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,9 +88,20 @@ public class CompanyService {
         return LocalDateTime.now().isBefore(closedOnDateTime);
     }
 
-    private CompanyResponse parseV2Response(String id, String body) {
+    private CompanyResponse parseV2Response(String id, String body) throws BackendResponseFormatException {
         // Logic for parsing V2 backend response
-        return new CompanyResponse(id, "Company V2", true, null);
+        try {
+            CompanyV2Response v2Response = objectMapper.readValue(body, CompanyV2Response.class);
+            ;
+            // Map fields from the V1 object to CompanyResponse
+            String name = v2Response.getCompanyName();
+            String closedOn = v2Response.getDissolvedOn();
+            boolean active = isActive(closedOn);
+
+            return new CompanyResponse(id, name, active, closedOn);
+        } catch(JsonProcessingException jpe) {
+            throw new BackendResponseFormatException(jpe);
+        }
     }
 
 }
