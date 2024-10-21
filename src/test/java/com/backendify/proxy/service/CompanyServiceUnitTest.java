@@ -208,6 +208,28 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
+    public void whenCompanyV2DissolvedOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+        // Simulate V2 backend response
+        String v2ResponseBody = "{\"company_name\": \"Backendify Ltd\", \"tin\": \"123456\", \"dissolved_on\": \"2025-01-01T00:00:00Z\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("application/x-company-v2"));
+
+        // Mock the RestTemplate to return a V1 response
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(v2ResponseBody, headers, HttpStatus.OK);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // Call the service method
+        CompanyResponse companyResponse = companyService.getCompany("123", "us");
+
+        // Verify the service's response
+        assertEquals("123", companyResponse.getId());
+        assertEquals("Backendify Ltd", companyResponse.getName());
+        assertTrue(companyResponse.isActive());
+        assertEquals("2025-01-01T00:00:00Z", companyResponse.getActiveUntil());
+
+    }
+
+    @Test
     public void whenMalformedJson_thenThrowAppropriateException() {
         // Simulate unsupported content type response
         String v1ResponseBody = "{\"malformed_json\"}";
