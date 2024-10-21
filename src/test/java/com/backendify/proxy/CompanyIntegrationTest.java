@@ -43,4 +43,25 @@ public class CompanyIntegrationTest {
                 .andExpect(jsonPath("$.name", is("Company V1")))
                 .andExpect(jsonPath("$.active", is(true)));
     }
+
+    // Test for successful V2 response
+    @Test
+    public void whenGetCompanyV2_thenReturnsCompanyResponse() throws Exception {
+        // Stub a V2 response from the backend
+        stubFor(get(urlEqualTo("/companies/456"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/x-company-v2")
+                        .withBody("{ \"company_name\": \"Company V2\", \"tin\": \"123456789\", \"dissolved_on\": \"2022-12-31T00:00:00Z\" }")
+                        .withStatus(200)));
+
+        // Perform the request and check the result
+        mockMvc.perform(MockMvcRequestBuilders.get("/company?id=456&country_iso=us")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is("456")))
+                .andExpect(jsonPath("$.name", is("Company V2")))
+                .andExpect(jsonPath("$.active", is(false)))
+                .andExpect(jsonPath("$.activeUntil", is("2022-12-31T00:00:00Z")));
+    }
 }
