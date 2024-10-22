@@ -1,12 +1,16 @@
 package com.backendify.proxy.service;
 
+import com.backendify.proxy.application.Application;
 import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,12 +21,15 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(classes = Application.class)
+@AutoConfigureMockMvc
+@ComponentScan(basePackages = "com.backendify.proxy")
 public class CompanyServiceUnitTest {
 
     @Autowired
@@ -30,8 +37,18 @@ public class CompanyServiceUnitTest {
     @MockBean
     private RestTemplate restTemplate;
 
+    @BeforeEach
+    public void setUp() {
+        // Setup the backend mappings for tests
+        Map<String, String> backendMappings = Map.of(
+                "us", "http://localhost:9001",
+                "ru", "http://localhost:9002"
+        );
+        companyService.setBackendMappings(backendMappings);
+    }
+
     @Test
-    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenGetCompanyV1_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Company V1\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -51,7 +68,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenGetCompanyV2_thenReturnCompanyResponse() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Company V2\", \"tin\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -104,7 +121,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenCompanyV1IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2022-01-28T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -125,7 +142,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV2IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenCompanyV2IsInactive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Backendify Ltd\", \"tin\": \"123456\", \"dissolved_on\": \"2022-01-28T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -146,7 +163,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenCompanyV1IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -166,7 +183,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV2IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenCompanyV2IsActive_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Backendify Ltd\", \"tin\": \"123456\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -186,7 +203,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenCompanyV1CloseOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V1 backend response
         String v1ResponseBody = "{\"cn\": \"Backendify Ltd\", \"created_on\": \"2022-01-01T00:00:00Z\", \"closed_on\": \"2025-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -208,7 +225,7 @@ public class CompanyServiceUnitTest {
     }
 
     @Test
-    public void whenCompanyV2DissolvedOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void whenCompanyV2DissolvedOnIsGreaterThanCurrentDate_thenParseCorrectly() throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
         // Simulate V2 backend response
         String v2ResponseBody = "{\"company_name\": \"Backendify Ltd\", \"tin\": \"123456\", \"dissolved_on\": \"2025-01-01T00:00:00Z\"}";
         HttpHeaders headers = new HttpHeaders();
@@ -285,4 +302,17 @@ public class CompanyServiceUnitTest {
             companyService.getCompany("999", "us");
         });
     }
+
+    @Test
+    public void whenCountryCodeNotFound_thenThrowCountryNotFoundException() {
+        // Call the public method getCompany which internally calls getBackendUrl
+        // Simulate that no backend is configured for the "fr" country code
+        assertThrows(CountryNotFoundException.class, () -> {
+            companyService.getCompany("123", "fr");
+        });
+    }
+
 }
+
+
+

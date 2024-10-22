@@ -17,12 +17,14 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 @Service
 public class CompanyService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private Map<String, String> backendMappings;
 
     // Constructor injection for RestTemplate
     @Autowired
@@ -31,11 +33,14 @@ public class CompanyService {
         this.objectMapper = objectMapper;
     }
 
-    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException {
+    public void setBackendMappings(Map<String, String> backendMappings){
+        this.backendMappings = backendMappings;
+    }
+    public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
 
         try {
             // Return the URL based on the country ISO code
-            String backendUrl = "http://localhost:8080/companies/" + id;
+            String backendUrl = getBackendUrl(countryIso);
 
             // Call the backend service using RestTemplate
             ResponseEntity<String> response = restTemplate.getForEntity(backendUrl, String.class);
@@ -62,6 +67,13 @@ public class CompanyService {
             throw new ConnectivityTimeoutException("Timeout or connectivity issue with backend: " + e.getMessage(), e);
         }
 
+    }
+
+    private String getBackendUrl(String countryCode) throws CountryNotFoundException {
+        if (!backendMappings.containsKey(countryCode))
+            throw new CountryNotFoundException("No backend configured for country code: " + countryCode);
+
+        return backendMappings.get(countryCode);
     }
 
     private CompanyResponse parseV1Response(String id, String body) throws BackendResponseFormatException {
