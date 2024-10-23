@@ -1,9 +1,14 @@
-FROM alpine:3
+# Use an official OpenJDK runtime as a parent image
+FROM openjdk:17-jdk-alpine
 
-# This Dockerfile is provided for empty as you will need to have a different
-# kind of file depending on the language you use to solve this challenge.
-# 
-# Feel free to change it as much as needed so it is your solution the one that
-# launches.
+# Set the working directory in the container
+WORKDIR /app
 
-ENTRYPOINT [ "/bin/echo", "implement", "me" ]
+# Copy the built jar file to the container
+COPY target/backendify-0.0.1-SNAPSHOT.jar /app/backendify.jar
+
+# Expose the correct port (9000)
+EXPOSE 9000
+
+# Run the jar file, instructing Spring Boot to listen on port 9000
+ENTRYPOINT ["java", "-jar", "backendify.jar", "--server.port=9000"]
