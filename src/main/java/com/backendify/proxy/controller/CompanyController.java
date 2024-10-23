@@ -21,7 +21,21 @@ public class CompanyController {
 
     @GetMapping ("/company")
     public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
-        CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
-        return ResponseEntity.ok(companyResponse);
+        try {
+            CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
+            return ResponseEntity.ok(companyResponse);
+        } catch (CompanyNotFoundException e) {
+            return ResponseEntity.status(404).build();  // 404 Not Found
+        } catch (BackendServerException e) {
+            return ResponseEntity.status(500).build();  // 500 Internal Server Error
+        } catch (ConnectivityTimeoutException e) {
+            return ResponseEntity.status(504).build();  // 504 Gateway Timeout
+        } catch (UnexpectedContentTypeException e) {
+            return ResponseEntity.status(415).build();  // 415 Unsupported Media Type
+        } catch (BackendResponseFormatException e) {
+            return ResponseEntity.status(502).build();  // 502 Bad Gateway
+        } catch (Exception e) {
+            return ResponseEntity.status(400).build();  // 400 Bad Request for unexpected errors
+        }
     }
 }
