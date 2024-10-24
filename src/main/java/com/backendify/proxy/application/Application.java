@@ -10,7 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import java.util.Map;
 
 @SpringBootApplication  // This annotation sets up Spring Boot's auto-configuration
-@ComponentScan(basePackages = {"com.backendify.proxy.service", "com.backendify.proxy.application"})
+@ComponentScan(basePackages = {"com.backendify.proxy"})
 public class Application implements CommandLineRunner {
 
     private final CompanyService companyService;
