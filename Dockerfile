@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-alpine
 WORKDIR /app
 
 # Copy the built jar file from gradle to the container
-COPY build/libs/backendify-0.0.1-SNAPSHOT.jar /app/backendify.jar
+COPY build/libs/backendify-proxy-service.jar /app/backendify.jar
 
 # Expose the correct port (9000)
 EXPOSE 9000
