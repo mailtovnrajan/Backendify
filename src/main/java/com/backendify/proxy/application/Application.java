@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 import java.util.Map;
 
 @SpringBootApplication  // This annotation sets up Spring Boot's auto-configuration
+@ComponentScan(basePackages = {"com.backendify.proxy.service", "com.backendify.proxy.application"})
 public class Application implements CommandLineRunner {
 
     private final CompanyService companyService;
@@ -28,4 +30,5 @@ public class Application implements CommandLineRunner {
         Map<String, String> backendMappings = CommandLineArgsParser.parseArgs(args);
         companyService.setBackendMappings(backendMappings);
     }
+
 }
