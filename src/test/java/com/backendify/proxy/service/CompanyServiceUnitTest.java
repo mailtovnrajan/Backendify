@@ -56,7 +56,7 @@ public class CompanyServiceUnitTest {
         
         // Mock the RestTemplate to return a V1 response
         ResponseEntity<String> responseEntity = new ResponseEntity<>(v1ResponseBody, headers, HttpStatus.OK);
-        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        when(restTemplate.getForEntity(Mockito.eq("http://localhost:9001/companies/123"), Mockito.eq(String.class))).thenReturn(responseEntity);
 
         // Call the service method
         CompanyResponse companyResponse = companyService.getCompany("123", "us");
@@ -76,7 +76,7 @@ public class CompanyServiceUnitTest {
 
         // Mock the RestTemplate to return a V2 response
         ResponseEntity<String> responseEntity = new ResponseEntity<>(v2ResponseBody, headers, HttpStatus.OK);
-        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+        when(restTemplate.getForEntity(Mockito.eq("http://localhost:9001/companies/123"), Mockito.eq(String.class))).thenReturn(responseEntity);
 
         // Call the service method
         CompanyResponse companyResponse = companyService.getCompany("123", "us");

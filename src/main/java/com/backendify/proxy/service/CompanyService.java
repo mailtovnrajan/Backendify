@@ -43,7 +43,7 @@ public class CompanyService {
             String backendUrl = getBackendUrl(countryIso);
 
             // Call the backend service using RestTemplate
-            ResponseEntity<String> response = restTemplate.getForEntity(backendUrl, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(backendUrl + "/companies/" + id, String.class);
             String body = response.getBody();
             HttpHeaders headers = response.getHeaders();
 
