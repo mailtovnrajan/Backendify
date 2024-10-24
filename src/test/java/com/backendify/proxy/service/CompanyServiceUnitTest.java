@@ -50,6 +50,9 @@ public class CompanyServiceUnitTest {
                 "ru", "http://localhost:9002"
         );
         companyService.setBackendMappings(backendMappings);
+        // Clear cache before each test
+        if (cacheManager.getCache("companyCache") != null)
+            cacheManager.getCache("companyCache").clear();
     }
 
     @Test
