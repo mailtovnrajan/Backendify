@@ -20,11 +20,11 @@ public class CompanyController {
     }
 
     @GetMapping ("/company")
-    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
+    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) {
         try {
             CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
             return ResponseEntity.ok(companyResponse);
-        } catch (CompanyNotFoundException e) {
+        } catch (CompanyNotFoundException | CountryNotFoundException e) {
             return ResponseEntity.status(404).build();  // 404 Not Found
         } catch (BackendServerException e) {
             return ResponseEntity.status(500).build();  // 500 Internal Server Error

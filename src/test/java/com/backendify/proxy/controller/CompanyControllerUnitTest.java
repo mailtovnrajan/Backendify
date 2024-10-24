@@ -7,11 +7,9 @@ import com.backendify.proxy.service.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -113,6 +111,20 @@ public class CompanyControllerUnitTest {
                         .param("country_iso", "us")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadGateway());  // Expect 502 Bad Gateway
+    }
+
+    // Test for CountryNotFoundException (404 Not Found)
+    @Test
+    public void whenCountryNotFound_thenReturns404() throws Exception, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
+        // Simulate CompanyNotFoundException
+        doThrow(new CountryNotFoundException("Country not found"))
+                .when(companyService).getCompany(anyString(), anyString());
+
+        mockMvc.perform(get("/company")
+                        .param("id", "123")
+                        .param("country_iso", "fr")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());  // Expect 404 Not Found
     }
 
 }
