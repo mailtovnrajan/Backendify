@@ -4,8 +4,8 @@ FROM openjdk:17-jdk-alpine
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the built jar file to the container
-COPY target/backendify-0.0.1-SNAPSHOT.jar /app/backendify.jar
+# Copy the built jar file from gradle to the container
+COPY build/libs/backendify-0.0.1-SNAPSHOT.jar /app/backendify.jar
 
 # Expose the correct port (9000)
 EXPOSE 9000
