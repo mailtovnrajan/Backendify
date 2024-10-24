@@ -1,4 +1,4 @@
-package com.backendify.proxy.model;
+package com.backendify.proxy.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
