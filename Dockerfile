@@ -11,4 +11,4 @@ COPY build/libs/backendify-proxy-service.jar /app/backendify.jar
 EXPOSE 9000
 
 # Run the jar file, instructing Spring Boot to listen on port 9000
-ENTRYPOINT ["java", "-jar", "backendify.jar", "--server.port=9000"]
+ENTRYPOINT ["java", "-jar", "backendify.jar"]
