@@ -5,18 +5,16 @@ stages:
 - canary
 
 ###################################################
-## uncomment this section to build your binary
-## if needed
-# build:
-#   stage: build
-#   image: # Add an image to build your service
-#   artifacts:
-#     paths:
-#       # pass my-app binary to the next stage
-#       # to include it in the Docker image
-#       - my-app
-#   script:
-#     - command to build my-app
+build:
+  stage: build
+  image: gradle:7.3.1-jdk17  # Use Gradle with JDK 17 to build the app
+  artifacts:
+    paths:
+      # Pass the JAR file to the next stage to include it in the Docker image
+      - build/libs/backendify-0.0.1-SNAPSHOT.jar
+  script:
+    # Clean and build the Gradle project, excluding tests
+    - gradle clean build -x test
 ###################################################
 
 ###################################################
