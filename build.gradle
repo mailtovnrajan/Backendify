@@ -16,6 +16,9 @@ repositories {
 dependencies {
     // Spring Boot Web dependency for REST APIs
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Dependencies for caching
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.9.2'
 
     // Spring Boot Test dependency for testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

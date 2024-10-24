@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,12 +32,15 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 @ComponentScan(basePackages = "com.backendify.proxy")
+@EnableCaching
 public class CompanyServiceUnitTest {
 
     @Autowired
     private CompanyService companyService;
     @MockBean
     private RestTemplate restTemplate;
+    @Autowired
+    private CacheManager cacheManager;
 
     @BeforeEach
     public void setUp() {
@@ -312,6 +317,86 @@ public class CompanyServiceUnitTest {
         });
     }
 
+    @Test
+    public void whenGetCompany_thenCacheResponse() throws Exception, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
+        // Set up a valid backend response
+        String validResponse = "{\"cn\": \"Test Company\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.valueOf("application/x-company-v1"));
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(validResponse, headers, HttpStatus.OK);
+
+        // Mock the backend call to return the valid response
+        when(restTemplate.getForEntity(Mockito.eq("http://localhost:9001/companies/123"), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // First call (should make the backend request)
+        CompanyResponse response = companyService.getCompany("123", "us");
+
+        // Verify that the response is as expected
+        assertNotNull(response);
+        assertEquals("123", response.getId());
+        assertEquals("Test Company", response.getName());
+
+        // Check if the response is cached
+        CompanyResponse cachedResponse = (CompanyResponse) cacheManager.getCache("companyCache").get("123-us").get();
+        assertNotNull(cachedResponse);
+        assertEquals("Test Company", cachedResponse.getName());
+    }
+
+    @Test
+    public void whenBackendFails_thenReturnCachedResponse() throws Exception, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
+        // Set up a valid backend response to be cached initially
+        String validResponse = "{\"cn\": \"Test Company\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.valueOf("application/x-company-v1"));
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(validResponse, headers, HttpStatus.OK);
+
+        // Mock the backend call to return the valid response
+        when(restTemplate.getForEntity(Mockito.eq("http://localhost:9001/companies/123"), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // First call (should make the backend request and cache the response)
+        CompanyResponse response = companyService.getCompany("123", "us");
+
+        // Verify the response and that it's cached
+        assertNotNull(response);
+        assertEquals("Test Company", response.getName());
+
+        // Simulate backend failure with an unchecked exception (like ResourceAccessException)
+        Mockito.reset(restTemplate);  // Reset the previous mock setup
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenThrow(new ResourceAccessException("Backend timed out"));
+
+        // Second call (should return cached response, even though the backend fails)
+        CompanyResponse cachedResponse = companyService.getCompany("123", "us");
+
+        // Verify the cached response is returned
+        assertNotNull(cachedResponse);
+        assertEquals("Test Company", cachedResponse.getName());
+    }
+
+    @Test
+    public void whenCacheExpires_thenBackendIsCalledAgain() throws Exception, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
+        // Mock a valid backend response
+        String validResponse = "{\"cn\": \"Test Company\", \"created_on\": \"2022-01-01T00:00:00Z\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.valueOf("application/x-company-v1"));
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(validResponse, headers, HttpStatus.OK);
+
+        // Mock the backend call
+        when(restTemplate.getForEntity(Mockito.eq("http://localhost:9001/companies/123"), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        // First call should cache the response
+        companyService.getCompany("123", "us");
+
+        // Simulate cache expiration manually (for test purposes)
+        cacheManager.getCache("companyCache").evict("123-us");
+
+        // Make the backend call again (should hit the backend because cache is cleared)
+        Mockito.reset(restTemplate);
+        when(restTemplate.getForEntity(anyString(), Mockito.eq(String.class))).thenReturn(responseEntity);
+
+        CompanyResponse responseAfterCacheEvict = companyService.getCompany("123", "us");
+        assertNotNull(responseAfterCacheEvict);
+        assertEquals("Test Company", responseAfterCacheEvict.getName());
+    }
 }
 
 
