@@ -1,6 +1,7 @@
 package com.backendify.proxy;
 
 import com.backendify.proxy.application.Application;
+import com.backendify.proxy.service.CompanyService;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterEach;
@@ -15,6 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Map;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,6 +30,19 @@ public class CompanyIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private CompanyService companyService;
+
+    @BeforeEach
+    public void setUp() {
+        // Set the backend mappings manually for the test
+        Map<String, String> backendMappings = Map.of(
+                "us", "http://localhost:8080",  // WireMock server URL
+                "ru", "http://localhost:8080"
+        );
+        companyService.setBackendMappings(backendMappings);
+    }
 
     // Integration test for successful company retrieval (V1)
     @Test
