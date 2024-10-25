@@ -124,9 +124,10 @@ public class CompanyService {
 
     String formatToRFC3339(String dateStr) throws DateTimeParseException {
         if (dateStr == null) return null;
+        return dateStr;
 
-        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
-        return date.format(DateTimeFormatter.ISO_INSTANT);  // Ensure RFC3339 UTC format with 'Z' offset
+//        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
+//        return date.format(DateTimeFormatter.ISO_INSTANT);  // Ensure RFC3339 UTC format with 'Z' offset
     }
 
 }
