@@ -72,8 +72,10 @@ public class CompanyService {
         } catch (HttpClientErrorException.NotFound e) {
             throw new CompanyNotFoundException("Company not found");
         } catch (HttpServerErrorException e) {
+            statsDClient.incrementCounter("metric.4");
             throw new BackendServerException("Backend server error: " + e.getStatusCode(), e);
         } catch (ResourceAccessException e) {
+            statsDClient.incrementCounter("metric.5");
             throw new ConnectivityTimeoutException("Timeout or connectivity issue with backend: " + e.getMessage(), e);
         }
 
@@ -94,7 +96,7 @@ public class CompanyService {
             String name = v1Response.getCompanyName();
             String closedOn = formatToRFC3339(v1Response.getClosedOn());
             boolean active = isActive(closedOn);
-
+            statsDClient.incrementCounter("metric.2");
             return new CompanyResponse(id, name, active, closedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
             throw new BackendResponseFormatException(e);
@@ -119,7 +121,7 @@ public class CompanyService {
             String name = v2Response.getCompanyName();
             String closedOn = formatToRFC3339(v2Response.getDissolvedOn());
             boolean active = isActive(closedOn);
-
+            statsDClient.incrementCounter("metric.3");
             return new CompanyResponse(id, name, active, closedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
             throw new BackendResponseFormatException(e);
