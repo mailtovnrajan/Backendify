@@ -11,9 +11,10 @@ public class StatsDClientConfig {
     @Bean
     public StatsDClient statsDClient() {
         // Initialize StatsD client with the STATSD_SERVER environment variable
-        String statsdServer = System.getenv("STATSD_SERVER");
-        System.out.println("STATSD_SERVER:"+ statsdServer);
-       return new NonBlockingStatsDClient("", statsdServer, 8125);
-
+        String statsdServerEnv = System.getenv("STATSD_SERVER");
+        String sarr[] = statsdServerEnv.split(":");
+        String statsDServer = sarr[0];
+        int statsDPort = Integer.parseInt(sarr[1]);
+       return new NonBlockingStatsDClient("", statsDServer, statsDPort);
     }
 }
