@@ -17,7 +17,10 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 
 @Service
@@ -85,12 +88,12 @@ public class CompanyService {
             ;
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
-            String closedOn = v1Response.getClosedOn();
+            String closedOn = formatToRFC3339(v1Response.getClosedOn());
             boolean active = isActive(closedOn);
 
             return new CompanyResponse(id, name, active, closedOn);
-        } catch(JsonProcessingException jpe) {
-            throw new BackendResponseFormatException(jpe);
+        } catch(JsonProcessingException | DateTimeParseException e) {
+            throw new BackendResponseFormatException(e);
         }
     }
 
@@ -110,13 +113,20 @@ public class CompanyService {
             ;
             // Map fields from the V1 object to CompanyResponse
             String name = v2Response.getCompanyName();
-            String closedOn = v2Response.getDissolvedOn();
+            String closedOn = formatToRFC3339(v2Response.getDissolvedOn());
             boolean active = isActive(closedOn);
 
             return new CompanyResponse(id, name, active, closedOn);
-        } catch(JsonProcessingException jpe) {
-            throw new BackendResponseFormatException(jpe);
+        } catch(JsonProcessingException | DateTimeParseException e) {
+            throw new BackendResponseFormatException(e);
         }
+    }
+
+    String formatToRFC3339(String dateStr) throws DateTimeParseException {
+        if (dateStr == null) return null;
+
+        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
+        return date.format(DateTimeFormatter.ISO_INSTANT);  // Ensure RFC3339 UTC format with 'Z' offset
     }
 
 }

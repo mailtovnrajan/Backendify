@@ -23,6 +23,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -399,6 +400,31 @@ public class CompanyServiceUnitTest {
         CompanyResponse responseAfterCacheEvict = companyService.getCompany("123", "us");
         assertNotNull(responseAfterCacheEvict);
         assertEquals("Test Company", responseAfterCacheEvict.getName());
+    }
+
+    @Test
+    public void testFormatToRFC3339_withInvalidDate() {
+        String invalidDate = "2022-01-01 00:00:00";
+
+        assertThrows(DateTimeParseException.class, () -> {
+            companyService.formatToRFC3339(invalidDate);
+        });
+    }
+
+    @Test
+    public void testFormatToRFC3339_withValidDate() {
+        String validDate = "2022-01-01T00:00:00Z";
+        String formattedDate = companyService.formatToRFC3339(validDate);
+
+        assertEquals("2022-01-01T00:00:00Z", formattedDate);
+    }
+
+    @Test
+    public void testFormatToRFC3339_withNonUTCDate() {
+        String nonUTCDate = "2022-01-01T00:00:00+02:00";
+        String formattedDate = companyService.formatToRFC3339(nonUTCDate);
+
+        assertEquals("2021-12-31T22:00:00Z", formattedDate);  // Converts to UTC
     }
 }
 
