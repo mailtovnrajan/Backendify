@@ -1,5 +1,8 @@
 package com.backendify.proxy.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CompanyResponse {
 
     private String id;
