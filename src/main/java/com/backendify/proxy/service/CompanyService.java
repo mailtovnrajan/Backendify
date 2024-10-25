@@ -98,12 +98,12 @@ public class CompanyService {
     }
 
     private boolean isActive(String closedOn) {
-        if (closedOn == null) return true; else return false;
+        if (closedOn == null) return true;
 
-//        LocalDateTime closedOnDateTime = LocalDateTime.parse(closedOn, DateTimeFormatter.ISO_DATE_TIME);
-//
-//        // Compare the current date with closed_on date
-//        return LocalDateTime.now().isBefore(closedOnDateTime);
+        LocalDateTime closedOnDateTime = LocalDateTime.parse(closedOn, DateTimeFormatter.ISO_DATE_TIME);
+
+        // Compare the current date with closed_on date
+        return LocalDateTime.now().isBefore(closedOnDateTime);
     }
 
     private CompanyResponse parseV2Response(String id, String body) throws BackendResponseFormatException {
