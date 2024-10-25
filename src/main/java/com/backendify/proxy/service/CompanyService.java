@@ -65,6 +65,7 @@ public class CompanyService {
                 } else if ("application/x-company-v2".equals(contentType)) {
                     return parseV2Response(id, body);
                 } else {
+                    statsDClient.incrementCounter("metric.4");
                     throw new UnexpectedContentTypeException("Unsupported backend response type");
                 }
             }
@@ -72,7 +73,7 @@ public class CompanyService {
         } catch (HttpClientErrorException.NotFound e) {
             throw new CompanyNotFoundException("Company not found");
         } catch (HttpServerErrorException e) {
-            statsDClient.incrementCounter("metric.4");
+            statsDClient.incrementCounter("metric.5");
             throw new BackendServerException("Backend server error: " + e.getStatusCode(), e);
         } catch (ResourceAccessException e) {
             statsDClient.incrementCounter("metric.5");
