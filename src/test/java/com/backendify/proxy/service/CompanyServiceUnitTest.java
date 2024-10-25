@@ -426,6 +426,7 @@ public class CompanyServiceUnitTest {
 
         assertEquals("2021-12-31T22:00:00Z", formattedDate);  // Converts to UTC
     }
+
 }
 
 
