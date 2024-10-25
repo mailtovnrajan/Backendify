@@ -12,6 +12,7 @@ public class StatsDClientConfig {
     public StatsDClient statsDClient() {
         // Initialize StatsD client with the STATSD_SERVER environment variable
         String statsdServer = System.getenv("STATSD_SERVER");
+        System.out.println("STATSD_SERVER:"+ statsdServer);
        return new NonBlockingStatsDClient("", statsdServer, 8125);
 
     }
