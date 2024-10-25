@@ -4,12 +4,14 @@ import com.backendify.proxy.application.Application;
 import com.backendify.proxy.service.CompanyService;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.timgroup.statsd.StatsDClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
@@ -33,6 +35,9 @@ public class CompanyIntegrationTest {
 
     @Autowired
     private CompanyService companyService;
+
+    @MockBean
+    private StatsDClient statsDClient;
 
     @BeforeEach
     public void setUp() {
@@ -70,7 +75,7 @@ public class CompanyIntegrationTest {
         stubFor(get(urlEqualTo("/companies/456"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/x-company-v2")
-                        .withBody("{ \"company_name\": \"Company V2\", \"tin\": \"123456789\", \"dissolved_on\": \"2022-12-31T00:00:00Z\" }")
+                        .withBody("{ \"company_name\": \"Company V2\", \"tin\": \"123456789\", \"dissolved_on\": \"2022-12-31T00:00:00+00:00\" }")
                         .withStatus(200)));
 
         // Perform the request and check the result

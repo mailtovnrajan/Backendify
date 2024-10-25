@@ -6,6 +6,8 @@ import com.backendify.proxy.model.CompanyV1Response;
 import com.backendify.proxy.model.CompanyV2Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
@@ -29,12 +31,14 @@ public class CompanyService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private Map<String, String> backendMappings;
+    private final StatsDClient statsDClient;
 
     // Constructor injection for RestTemplate
     @Autowired
-    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, StatsDClient statsDClient) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.statsDClient = statsDClient;
     }
 
     public void setBackendMappings(Map<String, String> backendMappings){
@@ -43,7 +47,7 @@ public class CompanyService {
 
     @Cacheable(value = "companyCache", key = "#id.concat('-').concat(#countryIso)", unless = "#result == null")
     public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
-
+        statsDClient.incrementCounter("metric.1");  // Count total requests
         try {
             // Return the URL based on the country ISO code
             String backendUrl = getBackendUrl(countryIso);
@@ -124,10 +128,9 @@ public class CompanyService {
 
     String formatToRFC3339(String dateStr) throws DateTimeParseException {
         if (dateStr == null) return null;
-        return dateStr;
 
-//        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
-//        return date.format(DateTimeFormatter.ISO_INSTANT);  // Ensure RFC3339 UTC format with 'Z' offset
+        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
+        return date.format(DateTimeFormatter.ISO_INSTANT);  // Ensure RFC3339 UTC format with 'Z' offset
     }
 
 }

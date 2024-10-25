@@ -402,30 +402,30 @@ public class CompanyServiceUnitTest {
         assertEquals("Test Company", responseAfterCacheEvict.getName());
     }
 
-//    @Test
-//    public void testFormatToRFC3339_withInvalidDate() {
-//        String invalidDate = "2022-01-01 00:00:00";
-//
-//        assertThrows(DateTimeParseException.class, () -> {
-//            companyService.formatToRFC3339(invalidDate);
-//        });
-//    }
-//
-//    @Test
-//    public void testFormatToRFC3339_withValidDate() {
-//        String validDate = "2022-01-01T00:00:00Z";
-//        String formattedDate = companyService.formatToRFC3339(validDate);
-//
-//        assertEquals("2022-01-01T00:00:00Z", formattedDate);
-//    }
-//
-//    @Test
-//    public void testFormatToRFC3339_withNonUTCDate() {
-//        String nonUTCDate = "2022-01-01T00:00:00+02:00";
-//        String formattedDate = companyService.formatToRFC3339(nonUTCDate);
-//
-//        assertEquals("2021-12-31T22:00:00Z", formattedDate);  // Converts to UTC
-//    }
+    @Test
+    public void testFormatToRFC3339_withInvalidDate() {
+        String invalidDate = "2022-01-01 00:00:00";
+
+        assertThrows(DateTimeParseException.class, () -> {
+            companyService.formatToRFC3339(invalidDate);
+        });
+    }
+
+    @Test
+    public void testFormatToRFC3339_withValidDate() {
+        String validDate = "2022-01-01T00:00:00Z";
+        String formattedDate = companyService.formatToRFC3339(validDate);
+
+        assertEquals("2022-01-01T00:00:00Z", formattedDate);
+    }
+
+    @Test
+    public void testFormatToRFC3339_withNonUTCDate() {
+        String nonUTCDate = "2022-01-01T00:00:00+02:00";
+        String formattedDate = companyService.formatToRFC3339(nonUTCDate);
+
+        assertEquals("2021-12-31T22:00:00Z", formattedDate);  // Converts to UTC
+    }
 
 }
 
