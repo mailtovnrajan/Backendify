@@ -43,7 +43,7 @@ public class CompanyService {
         this.backendMappings = backendMappings;
     }
 
-    @Cacheable(value = "companyCache", key = "#id.concat('-').concat(#countryIso)", unless = "#result == null")
+//    @Cacheable(value = "companyCache", key = "#id.concat('-').concat(#countryIso)", unless = "#result == null")
     public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
         metricsService.incrementRequestCount();  // Count total requests
         try {
