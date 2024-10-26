@@ -20,22 +20,22 @@ public class CompanyController {
     }
 
     @GetMapping ("/company")
-    public ResponseEntity<CompanyResponse> getCompany(@RequestParam String id, @RequestParam String country_iso) {
+    public ResponseEntity<?> getCompany(@RequestParam String id, @RequestParam String country_iso) {
         try {
             CompanyResponse companyResponse = companyService.getCompany(id, country_iso);
             return ResponseEntity.ok(companyResponse);
         } catch (CompanyNotFoundException | CountryNotFoundException e) {
-            return ResponseEntity.status(404).build();  // 404 Not Found
+            return ResponseEntity.status(404).body(e.getMessage());  // 404 Not Found
         } catch (BackendServerException e) {
-            return ResponseEntity.status(500).build();  // 500 Internal Server Error
+            return ResponseEntity.status(500).body(e.getMessage()); // 500 Internal Server Error
         } catch (ConnectivityTimeoutException e) {
-            return ResponseEntity.status(504).build();  // 504 Gateway Timeout
+            return ResponseEntity.status(504).body(e.getMessage());  // 504 Gateway Timeout
         } catch (UnexpectedContentTypeException e) {
-            return ResponseEntity.status(415).build();  // 415 Unsupported Media Type
+            return ResponseEntity.status(415).body(e.getMessage());  // 415 Unsupported Media Type
         } catch (BackendResponseFormatException e) {
-            return ResponseEntity.status(502).build();  // 502 Bad Gateway
+            return ResponseEntity.status(502).body(e.getMessage());  // 502 Bad Gateway
         } catch (Exception e) {
-            return ResponseEntity.status(400).build();  // 400 Bad Request for unexpected errors
+            return ResponseEntity.status(400).body(e.getMessage());  // 400 Bad Request for unexpected errors
         }
     }
 }

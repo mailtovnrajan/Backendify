@@ -4,6 +4,8 @@ import com.backendify.proxy.application.Application;
 import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.service.CompanyService;
+import com.backendify.proxy.service.MetricsService;
+import com.timgroup.statsd.StatsDClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -30,6 +32,12 @@ public class CompanyControllerUnitTest {
     @MockBean
     private CompanyService companyService;
 
+    @MockBean
+    private MetricsService metricsService;
+
+    @MockBean
+    private StatsDClient statsDClient;
+
     //Test for successful retrieval response (200 OK)
     @Test
     public void whenGetCompany_thenReturns200() throws Exception, BackendResponseFormatException, CompanyNotFoundException, BackendServerException, ConnectivityTimeoutException, CountryNotFoundException {
@@ -54,7 +62,8 @@ public class CompanyControllerUnitTest {
                         .param("id", "123")
                         .param("country_iso", "us")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());  // Expect 404 Not Found
+                .andExpect(status().isNotFound()) // Expect 404 Not Found
+                .andExpect(content().string("Company not found"));
     }
 
     // Test for BackendServerException (500 Internal Server Error)
@@ -68,7 +77,8 @@ public class CompanyControllerUnitTest {
                         .param("id", "123")
                         .param("country_iso", "us")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());  // Expect 500 Internal Server Error
+                .andExpect(status().isInternalServerError()) // Expect 500 Internal Server Error
+                .andExpect(content().string("Backend server error"));
     }
 
     // Test for ConnectivityTimeoutException (504 Gateway Timeout)
@@ -82,7 +92,8 @@ public class CompanyControllerUnitTest {
                         .param("id", "123")
                         .param("country_iso", "us")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isGatewayTimeout());  // Expect 504 Gateway Timeout
+                .andExpect(status().isGatewayTimeout())  // Expect 504 Gateway Timeout
+                .andExpect(content().string("Timeout or connectivity issue"));
     }
 
     // Test for UnexpectedContentTypeException (415 Unsupported Media Type)
@@ -96,7 +107,8 @@ public class CompanyControllerUnitTest {
                         .param("id", "123")
                         .param("country_iso", "us")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnsupportedMediaType());  // Expect 415 Unsupported Media Type
+                .andExpect(status().isUnsupportedMediaType())  // Expect 415 Unsupported Media Type
+                .andExpect(content().string("Unsupported content type"));
     }
 
     // Test for BackendResponseFormatException (502 Bad Gateway)
@@ -110,7 +122,8 @@ public class CompanyControllerUnitTest {
                         .param("id", "123")
                         .param("country_iso", "us")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadGateway());  // Expect 502 Bad Gateway
+                .andExpect(status().isBadGateway())  // Expect 502 Bad Gateway
+                .andExpect(content().string("Backend response format error"));
     }
 
     // Test for CountryNotFoundException (404 Not Found)
@@ -124,7 +137,8 @@ public class CompanyControllerUnitTest {
                         .param("id", "123")
                         .param("country_iso", "fr")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());  // Expect 404 Not Found
+                .andExpect(status().isNotFound())  // Expect 404 Not Found
+                .andExpect(content().string("Country not found"));
     }
 
 }

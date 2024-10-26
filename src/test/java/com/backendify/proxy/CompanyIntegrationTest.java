@@ -2,10 +2,8 @@ package com.backendify.proxy;
 
 import com.backendify.proxy.application.Application;
 import com.backendify.proxy.service.CompanyService;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
+import com.backendify.proxy.service.MetricsService;
 import com.timgroup.statsd.StatsDClient;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +33,9 @@ public class CompanyIntegrationTest {
 
     @Autowired
     private CompanyService companyService;
+
+    @MockBean
+    private MetricsService metricsService;
 
     @MockBean
     private StatsDClient statsDClient;

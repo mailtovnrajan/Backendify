@@ -3,6 +3,7 @@ package com.backendify.proxy.service;
 import com.backendify.proxy.application.Application;
 import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
+import com.timgroup.statsd.StatsDClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -42,6 +43,11 @@ public class CompanyServiceUnitTest {
     private RestTemplate restTemplate;
     @Autowired
     private CacheManager cacheManager;
+    @MockBean
+    private MetricsService metricsService;
+    @MockBean
+    private StatsDClient statsDClient;
+
 
     @BeforeEach
     public void setUp() {

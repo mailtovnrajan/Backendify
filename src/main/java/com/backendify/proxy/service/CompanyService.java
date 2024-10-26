@@ -6,8 +6,6 @@ import com.backendify.proxy.model.CompanyV1Response;
 import com.backendify.proxy.model.CompanyV2Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.timgroup.statsd.NonBlockingStatsDClient;
-import com.timgroup.statsd.StatsDClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
@@ -31,14 +29,14 @@ public class CompanyService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private Map<String, String> backendMappings;
-    private final StatsDClient statsDClient;
+    private final MetricsService metricsService;
 
     // Constructor injection for RestTemplate
     @Autowired
-    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, StatsDClient statsDClient) {
+    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, MetricsService metricsService) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        this.statsDClient = statsDClient;
+        this.metricsService = metricsService;
     }
 
     public void setBackendMappings(Map<String, String> backendMappings){
@@ -47,7 +45,7 @@ public class CompanyService {
 
     @Cacheable(value = "companyCache", key = "#id.concat('-').concat(#countryIso)", unless = "#result == null")
     public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
-        statsDClient.incrementCounter("metric.1");  // Count total requests
+        metricsService.incrementRequestCount();  // Count total requests
         try {
             // Return the URL based on the country ISO code
             String backendUrl = getBackendUrl(countryIso);
@@ -65,7 +63,7 @@ public class CompanyService {
                 } else if ("application/x-company-v2".equals(contentType)) {
                     return parseV2Response(id, body);
                 } else {
-                    statsDClient.incrementCounter("metric.4");
+                    metricsService.incrementUnexpectedContentTypeCount();
                     throw new UnexpectedContentTypeException("Unsupported backend response type");
                 }
             }
@@ -73,10 +71,10 @@ public class CompanyService {
         } catch (HttpClientErrorException.NotFound e) {
             throw new CompanyNotFoundException("Company not found");
         } catch (HttpServerErrorException e) {
-            statsDClient.incrementCounter("metric.5");
+            metricsService.incrementBackendErrorCount();
             throw new BackendServerException("Backend server error: " + e.getStatusCode(), e);
         } catch (ResourceAccessException e) {
-            statsDClient.incrementCounter("metric.5");
+            metricsService.incrementBackendErrorCount();
             throw new ConnectivityTimeoutException("Timeout or connectivity issue with backend: " + e.getMessage(), e);
         }
 
@@ -97,7 +95,7 @@ public class CompanyService {
             String name = v1Response.getCompanyName();
             String closedOn = formatToRFC3339(v1Response.getClosedOn());
             boolean active = isActive(closedOn);
-            statsDClient.incrementCounter("metric.2");
+            metricsService.incrementCompanyV1ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
             throw new BackendResponseFormatException(e);
@@ -122,7 +120,7 @@ public class CompanyService {
             String name = v2Response.getCompanyName();
             String closedOn = formatToRFC3339(v2Response.getDissolvedOn());
             boolean active = isActive(closedOn);
-            statsDClient.incrementCounter("metric.3");
+            metricsService.incrementCompanyV2ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
             throw new BackendResponseFormatException(e);
