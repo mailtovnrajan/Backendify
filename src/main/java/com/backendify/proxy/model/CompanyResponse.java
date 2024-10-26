@@ -1,5 +1,6 @@
 package com.backendify.proxy.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -9,6 +10,10 @@ public class CompanyResponse {
     private String name;
     private boolean active;
     private String activeUntil;  // Optional field, can be null
+    @JsonIgnore
+    private String eTag;
+    @JsonIgnore
+    private Long lastModified;
 
     // Constructor
     public CompanyResponse(String id, String name, boolean active, String activeUntil) {
@@ -50,4 +55,12 @@ public class CompanyResponse {
     public void setActiveUntil(String activeUntil) {
         this.activeUntil = activeUntil;
     }
+
+    public String getETag() {return eTag;}
+
+    public void setETag(String eTag) {this.eTag = eTag;}
+
+    public Long getLastModified() {return lastModified;}
+
+    public void setLastModified(Long lastModified) {this.lastModified = lastModified;}
 }
