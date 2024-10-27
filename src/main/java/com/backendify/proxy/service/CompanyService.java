@@ -57,6 +57,7 @@ public class CompanyService {
         // If we have a cached response, try to validate it using conditional requests
         HttpHeaders requestHeaders = new HttpHeaders();
         if (cachedResponse != null) {
+            cachedResponse.setActiveUntil(formatToRFC3339(cachedResponse.getActiveUntil()));
             // Add ETag or Last-Modified headers to check if data has changed
             if (cachedResponse.getETag() != null) {
                 requestHeaders.setIfNoneMatch(cachedResponse.getETag());
