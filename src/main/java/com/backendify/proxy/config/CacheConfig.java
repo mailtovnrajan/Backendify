@@ -33,7 +33,7 @@ public class CacheConfig {
                     public long expireAfterCreate(@NonNull Object key, @NonNull Object value, long currentTime) {
                         CompanyResponse valueAsCompanyResponse = (CompanyResponse) value;
 
-                        if (valueAsCompanyResponse.isActive()) {
+                        if (valueAsCompanyResponse.isActive() && valueAsCompanyResponse.getActiveUntil() != null) {
                             LocalDateTime activeUntil = LocalDateTime.parse(valueAsCompanyResponse.getActiveUntil(), DateTimeFormatter.ISO_DATE_TIME);
                             return activeUntil.getNano() - LocalDateTime.now().getNano();
                         } else {
@@ -45,7 +45,7 @@ public class CacheConfig {
                     public long expireAfterUpdate(@NonNull Object key, @NonNull Object value, long currentTime, @NonNegative long currentDuration) {
                         CompanyResponse valueAsCompanyResponse = (CompanyResponse) value;
 
-                        if (valueAsCompanyResponse.isActive()) {
+                        if (valueAsCompanyResponse.isActive() && valueAsCompanyResponse.getActiveUntil() != null) {
                             LocalDateTime activeUntil = LocalDateTime.parse(valueAsCompanyResponse.getActiveUntil(), DateTimeFormatter.ISO_DATE_TIME);
                             return activeUntil.getNano() - LocalDateTime.now().getNano();
                         } else {
