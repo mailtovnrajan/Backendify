@@ -52,8 +52,8 @@ public class CompanyService {
         metricsService.incrementRequestCount();  // Count total requests
         // Create a cache key
         String cacheKey = id.concat("-").concat(countryIso);
-        CompanyResponse cachedResponse = (CompanyResponse) cacheManager.getCache("companyCache").get(cacheKey, CompanyResponse.class);
-
+//        CompanyResponse cachedResponse = (CompanyResponse) cacheManager.getCache("companyCache").get(cacheKey, CompanyResponse.class);
+        CompanyResponse cachedResponse = null;
         // If we have a cached response, try to validate it using conditional requests
         HttpHeaders requestHeaders = new HttpHeaders();
         if (cachedResponse != null) {

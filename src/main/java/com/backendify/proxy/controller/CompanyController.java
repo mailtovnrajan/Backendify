@@ -35,7 +35,7 @@ public class CompanyController {
         } catch (BackendResponseFormatException e) {
             return ResponseEntity.status(502).body(e.getMessage());  // 502 Bad Gateway
         } catch (Exception e) {
-            return ResponseEntity.status(400).body(e.getMessage());  // 400 Bad Request for unexpected errors
+            return ResponseEntity.status(500).body(e.getMessage());  // 500 Internal Server Error for unexpected errors
         }
     }
 }

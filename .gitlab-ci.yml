@@ -35,9 +35,6 @@ release:
 canary:
   stage: canary
   image: registry.gitlab.com/autoiterativesolutions/src/monolith/ais-client:master
-  before_script:
-    - echo "STATSD_SERVER:"
-    - echo ${STATSD_SERVER}
   script: [ "/usr/bin/ais-client" ]
 ##
 ###################################################
