@@ -16,7 +16,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -108,7 +109,7 @@ public class CompanyService {
             ;
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
-            String closedOn = formatToRFC3339(v1Response.getClosedOn());
+            String closedOn = v1Response.getClosedOn();
             boolean active = isActive(closedOn);
             metricsService.incrementCompanyV1ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
@@ -120,10 +121,11 @@ public class CompanyService {
     private boolean isActive(String closedOn) {
         if (closedOn == null) return true;
 
-        LocalDateTime closedOnDateTime = LocalDateTime.parse(closedOn, DateTimeFormatter.ISO_DATE_TIME);
+        // Parse the closedOn string using RFC 3339 format
+        OffsetDateTime closedOnDateTime = OffsetDateTime.parse(closedOn, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-//         Compare the current date with closed_on date
-        return LocalDateTime.now().isBefore(closedOnDateTime);
+        // Compare the current date-time in UTC with closed_on date-time
+        return OffsetDateTime.now(ZoneOffset.UTC).isBefore(closedOnDateTime);
     }
 
     private CompanyResponse parseV2Response(String id, String body) throws BackendResponseFormatException {
@@ -133,7 +135,7 @@ public class CompanyService {
             ;
             // Map fields from the V1 object to CompanyResponse
             String name = v2Response.getCompanyName();
-            String closedOn = formatToRFC3339(v2Response.getDissolvedOn());
+            String closedOn = v2Response.getDissolvedOn();
             boolean active = isActive(closedOn);
             metricsService.incrementCompanyV2ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
