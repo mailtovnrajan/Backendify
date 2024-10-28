@@ -114,6 +114,7 @@ public class CompanyService {
             String name = v1Response.getCompanyName();
             String closedOn = formatToRFC3339(v1Response.getClosedOn());
             boolean active = isActive(closedOn);
+            if(active) closedOn = null;
             metricsService.incrementCompanyV1ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
@@ -126,7 +127,7 @@ public class CompanyService {
 
         LocalDateTime closedOnDateTime = LocalDateTime.parse(closedOn, DateTimeFormatter.ISO_DATE_TIME);
 
-        // Compare the current date with closed_on date
+//         Compare the current date with closed_on date
         return LocalDateTime.now().isBefore(closedOnDateTime);
     }
 
@@ -139,6 +140,7 @@ public class CompanyService {
             String name = v2Response.getCompanyName();
             String closedOn = formatToRFC3339(v2Response.getDissolvedOn());
             boolean active = isActive(closedOn);
+            if(active) closedOn = null;
             metricsService.incrementCompanyV2ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
@@ -149,8 +151,8 @@ public class CompanyService {
     String formatToRFC3339(String dateStr) throws DateTimeParseException {
         if (dateStr == null) return null;
 
-        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
-        return date.format(DateTimeFormatter.ISO_INSTANT);  // Ensure RFC3339 UTC format with 'Z' offset
+        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME);
+        return date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
 }
