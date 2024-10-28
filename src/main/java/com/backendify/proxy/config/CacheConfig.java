@@ -1,62 +1,55 @@
 package com.backendify.proxy.config;
 
 import com.backendify.proxy.model.CompanyResponse;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Expiry;
-import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Configuration
-@EnableCaching
+@Component
 public class CacheConfig {
 
-    @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("companyCache");
-        cacheManager.setCaffeine(caffeineCacheBuilder());
-        return cacheManager;
+    private final ConcurrentHashMap<String, CacheEntry> cacheMap = new ConcurrentHashMap<>();
+
+    // TTL for cache entries (24 hours)
+    private static final long CACHE_TTL_IN_SECONDS = 24 * 60 * 60;
+
+    // Method to retrieve from cache
+    public CompanyResponse get(String key) {
+        CacheEntry entry = cacheMap.get(key);
+        if (entry == null || isExpired(entry)) {
+            cacheMap.remove(key);
+            return null;
+        }
+        return entry.getValue();
     }
 
-    Caffeine<Object, Object> caffeineCacheBuilder() {
-        return Caffeine.newBuilder()
-                .expireAfter(new Expiry<Object, Object>() {
-                    @Override
-                    public long expireAfterCreate(@NonNull Object key, @NonNull Object value, long currentTime) {
-                        CompanyResponse valueAsCompanyResponse = (CompanyResponse) value;
+    // Method to add to cache
+    public void put(String key, CompanyResponse value) {
+        cacheMap.put(key, new CacheEntry(value, LocalDateTime.now()));
+    }
 
-                        if (valueAsCompanyResponse.isActive() && valueAsCompanyResponse.getActiveUntil() != null) {
-                            LocalDateTime activeUntil = LocalDateTime.parse(valueAsCompanyResponse.getActiveUntil(), DateTimeFormatter.ISO_DATE_TIME);
-                            return activeUntil.getNano() - LocalDateTime.now().getNano();
-                        } else {
-                            return TimeUnit.HOURS.toNanos(24);
-                        }
-                    }
+    // Check if cache entry is expired
+    private boolean isExpired(CacheEntry entry) {
+        return LocalDateTime.now().isAfter(entry.getTimestamp().plusSeconds(CACHE_TTL_IN_SECONDS));
+    }
 
-                    @Override
-                    public long expireAfterUpdate(@NonNull Object key, @NonNull Object value, long currentTime, @NonNegative long currentDuration) {
-                        CompanyResponse valueAsCompanyResponse = (CompanyResponse) value;
+    // Inner class representing a cache entry
+    private static class CacheEntry {
+        private final CompanyResponse value;
+        private final LocalDateTime timestamp;
 
-                        if (valueAsCompanyResponse.isActive() && valueAsCompanyResponse.getActiveUntil() != null) {
-                            LocalDateTime activeUntil = LocalDateTime.parse(valueAsCompanyResponse.getActiveUntil(), DateTimeFormatter.ISO_DATE_TIME);
-                            return activeUntil.getNano() - LocalDateTime.now().getNano();
-                        } else {
-                            return TimeUnit.HOURS.toNanos(24);
-                        }
-                    }
+        public CacheEntry(CompanyResponse value, LocalDateTime timestamp) {
+            this.value = value;
+            this.timestamp = timestamp;
+        }
 
-                    @Override
-                    public long expireAfterRead(@NonNull Object key, @NonNull Object value, long currentTime, @NonNegative long currentDuration) {
-                        return currentDuration;
-                    }
-                });
+        public CompanyResponse getValue() {
+            return value;
+        }
+
+        public LocalDateTime getTimestamp() {
+            return timestamp;
+        }
     }
 }

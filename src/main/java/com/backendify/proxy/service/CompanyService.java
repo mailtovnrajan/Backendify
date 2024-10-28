@@ -1,5 +1,6 @@
 package com.backendify.proxy.service;
 
+import com.backendify.proxy.config.CacheConfig;
 import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.model.CompanyV1Response;
@@ -32,11 +33,11 @@ public class CompanyService {
     private final ObjectMapper objectMapper;
     private Map<String, String> backendMappings;
     private final MetricsService metricsService;
-    private final CacheManager cacheManager;
+    private final CacheConfig cacheManager;
 
     // Constructor injection for RestTemplate
     @Autowired
-    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, MetricsService metricsService, CacheManager cacheManager) {
+    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, MetricsService metricsService, CacheConfig cacheManager) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.metricsService = metricsService;
@@ -52,8 +53,7 @@ public class CompanyService {
         metricsService.incrementRequestCount();  // Count total requests
         // Create a cache key
         String cacheKey = id.concat("-").concat(countryIso);
-//        CompanyResponse cachedResponse = (CompanyResponse) cacheManager.getCache("companyCache").get(cacheKey, CompanyResponse.class);
-        CompanyResponse cachedResponse = null;
+        CompanyResponse cachedResponse = cacheManager.get(cacheKey);
         // If we have a cached response, try to validate it using conditional requests
         HttpHeaders requestHeaders = new HttpHeaders();
         if (cachedResponse != null) {
@@ -87,7 +87,7 @@ public class CompanyService {
                     if ("application/x-company-v1".equals(contentType)) {
                         metricsService.incrementCompanyV1ResponseCount();
                         CompanyResponse companyResponse = parseV1Response(id, body);
-                        cacheManager.getCache("companyCache").put(cacheKey, companyResponse);
+                        cacheManager.put(cacheKey, companyResponse);
                         // Set ETag and Last-Modified headers
                         companyResponse.setETag(responseHeaders.getETag());
                         companyResponse.setLastModified(responseHeaders.getLastModified());
@@ -95,7 +95,7 @@ public class CompanyService {
                     } else if ("application/x-company-v2".equals(contentType)) {
                         metricsService.incrementCompanyV2ResponseCount();
                         CompanyResponse companyResponse = parseV2Response(id, body);
-                        cacheManager.getCache("companyCache").put(cacheKey, companyResponse);
+                        cacheManager.put(cacheKey, companyResponse);
                         // Set ETag and Last-Modified headers
                         companyResponse.setETag(responseHeaders.getETag());
                         companyResponse.setLastModified(responseHeaders.getLastModified());
