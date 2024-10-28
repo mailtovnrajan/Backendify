@@ -76,7 +76,7 @@ public class CompanyIntegrationTest {
         stubFor(get(urlEqualTo("/companies/456"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/x-company-v2")
-                        .withBody("{ \"company_name\": \"Company V2\", \"tin\": \"123456789\", \"dissolved_on\": \"2022-12-31T00:00:00+00:00\" }")
+                        .withBody("{ \"company_name\": \"Company V2\", \"tin\": \"123456789\", \"dissolved_on\": \"2022-12-31T00:00:00Z\" }")
                         .withStatus(200)));
 
         // Perform the request and check the result

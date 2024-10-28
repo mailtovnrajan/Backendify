@@ -1,6 +1,5 @@
 package com.backendify.proxy.service;
 
-import com.backendify.proxy.config.CacheConfig;
 import com.backendify.proxy.exception.*;
 import com.backendify.proxy.model.CompanyResponse;
 import com.backendify.proxy.model.CompanyV1Response;
@@ -8,6 +7,7 @@ import com.backendify.proxy.model.CompanyV2Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
@@ -30,40 +29,29 @@ public class CompanyService {
     private final ObjectMapper objectMapper;
     private Map<String, String> backendMappings;
     private final MetricsService metricsService;
-    private final CacheConfig cacheManager;
 
     // Constructor injection for RestTemplate
     @Autowired
-    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, MetricsService metricsService, CacheConfig cacheManager) {
+    public CompanyService(RestTemplate restTemplate, ObjectMapper objectMapper, MetricsService metricsService) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.metricsService = metricsService;
-        this.cacheManager = cacheManager;
     }
 
     public void setBackendMappings(Map<String, String> backendMappings){
         this.backendMappings = backendMappings;
     }
 
-//    @Cacheable(value = "companyCache", key = "#id.concat('-').concat(#countryIso)", unless = "#result == null")
+    @Cacheable(value = "companyCache", key = "#id.concat('-').concat(#countryIso)", unless = "#result == null")
     public CompanyResponse getCompany(String id, String countryIso) throws UnexpectedContentTypeException, BackendResponseFormatException, CompanyNotFoundException, CountryNotFoundException, BackendServerException, ConnectivityTimeoutException {
         metricsService.incrementRequestCount();  // Count total requests
-        // Create a cache key
-        String cacheKey = id.concat("-").concat(countryIso);
-        CompanyResponse cachedResponse = cacheManager.get(cacheKey);
-
-        if (cachedResponse != null) {
-            return cachedResponse;
-        }
 
         try {
             // Return the URL based on the country ISO code
             String backendUrl = getBackendUrl(countryIso);
-            // Make a conditional request to the backend
+            // Call the backend service using RestTemplate
             ResponseEntity<String> response = restTemplate.getForEntity(backendUrl + "/companies/" + id, String.class);
 
-            // Update the cache with the new response data
-            // Call the backend service using RestTemplate
             String body = response.getBody();
             HttpHeaders responseHeaders = response.getHeaders();
             if (responseHeaders.getContentType() != null) {
@@ -71,14 +59,10 @@ public class CompanyService {
 
                 if ("application/x-company-v1".equals(contentType)) {
                     metricsService.incrementCompanyV1ResponseCount();
-                    CompanyResponse companyResponse = parseV1Response(id, body);
-                    cacheManager.put(cacheKey, companyResponse);
-                    return companyResponse;
+                    return parseV1Response(id, body);
                 } else if ("application/x-company-v2".equals(contentType)) {
                     metricsService.incrementCompanyV2ResponseCount();
-                    CompanyResponse companyResponse = parseV2Response(id, body);
-                    cacheManager.put(cacheKey, companyResponse);
-                    return companyResponse;
+                    return parseV2Response(id, body);
                 } else {
                     metricsService.incrementUnexpectedContentTypeCount();
                     throw new UnexpectedContentTypeException("Unsupported backend response type");
@@ -104,15 +88,30 @@ public class CompanyService {
     }
 
     private CompanyResponse parseV1Response(String id, String body) throws BackendResponseFormatException {
+        // Logic for parsing V1 backend response
         try {
             CompanyV1Response v1Response = objectMapper.readValue(body, CompanyV1Response.class);
-            ;
             // Map fields from the V1 object to CompanyResponse
             String name = v1Response.getCompanyName();
             String closedOn = v1Response.getClosedOn();
             boolean active = isActive(closedOn);
             metricsService.incrementCompanyV1ResponseCount();
             return new CompanyResponse(id, name, active, closedOn);
+        } catch(JsonProcessingException | DateTimeParseException e) {
+            throw new BackendResponseFormatException(e);
+        }
+    }
+
+    private CompanyResponse parseV2Response(String id, String body) throws BackendResponseFormatException {
+        // Logic for parsing V2 backend response
+        try {
+            CompanyV2Response v2Response = objectMapper.readValue(body, CompanyV2Response.class);
+            // Map fields from the V2 object to CompanyResponse
+            String name = v2Response.getCompanyName();
+            String dissolvedOn = v2Response.getDissolvedOn();
+            boolean active = isActive(dissolvedOn);
+            metricsService.incrementCompanyV2ResponseCount();
+            return new CompanyResponse(id, name, active, dissolvedOn);
         } catch(JsonProcessingException | DateTimeParseException e) {
             throw new BackendResponseFormatException(e);
         }
@@ -128,27 +127,5 @@ public class CompanyService {
         return OffsetDateTime.now(ZoneOffset.UTC).isBefore(closedOnDateTime);
     }
 
-    private CompanyResponse parseV2Response(String id, String body) throws BackendResponseFormatException {
-        // Logic for parsing V2 backend response
-        try {
-            CompanyV2Response v2Response = objectMapper.readValue(body, CompanyV2Response.class);
-            ;
-            // Map fields from the V1 object to CompanyResponse
-            String name = v2Response.getCompanyName();
-            String closedOn = v2Response.getDissolvedOn();
-            boolean active = isActive(closedOn);
-            metricsService.incrementCompanyV2ResponseCount();
-            return new CompanyResponse(id, name, active, closedOn);
-        } catch(JsonProcessingException | DateTimeParseException e) {
-            throw new BackendResponseFormatException(e);
-        }
-    }
-
-    String formatToRFC3339(String dateStr) throws DateTimeParseException {
-        if (dateStr == null) return null;
-
-        ZonedDateTime date = ZonedDateTime.parse(dateStr, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        return date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-    }
 
 }
