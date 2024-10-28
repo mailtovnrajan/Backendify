@@ -54,61 +54,40 @@ public class CompanyService {
         // Create a cache key
         String cacheKey = id.concat("-").concat(countryIso);
         CompanyResponse cachedResponse = cacheManager.get(cacheKey);
-        // If we have a cached response, try to validate it using conditional requests
-        HttpHeaders requestHeaders = new HttpHeaders();
+
         if (cachedResponse != null) {
-            cachedResponse.setActiveUntil(formatToRFC3339(cachedResponse.getActiveUntil()));
-            // Add ETag or Last-Modified headers to check if data has changed
-            if (cachedResponse.getETag() != null) {
-                requestHeaders.setIfNoneMatch(cachedResponse.getETag());
-            }
-            if (cachedResponse.getLastModified() != null) {
-                requestHeaders.setIfModifiedSince(cachedResponse.getLastModified());
-            }
+            return cachedResponse;
         }
 
         try {
             // Return the URL based on the country ISO code
             String backendUrl = getBackendUrl(countryIso);
             // Make a conditional request to the backend
-            ResponseEntity<String> response = restTemplate.getForEntity(backendUrl + "/companies/" + id, String.class, requestHeaders);
-            if (response.getStatusCode() == HttpStatus.NOT_MODIFIED && cachedResponse != null) {
-                // The data hasn't changed, use the cached response
-                return cachedResponse;
-            } else if (response.getStatusCode() == HttpStatus.OK) {
-                // Update the cache with the new response data
-                // Call the backend service using RestTemplate
-                String body = response.getBody();
-                HttpHeaders responseHeaders = response.getHeaders();
+            ResponseEntity<String> response = restTemplate.getForEntity(backendUrl + "/companies/" + id, String.class);
 
-                if (responseHeaders.getContentType() != null) {
-                    String contentType = responseHeaders.getContentType().toString();
+            // Update the cache with the new response data
+            // Call the backend service using RestTemplate
+            String body = response.getBody();
+            HttpHeaders responseHeaders = response.getHeaders();
+            if (responseHeaders.getContentType() != null) {
+                String contentType = responseHeaders.getContentType().toString();
 
-                    if ("application/x-company-v1".equals(contentType)) {
-                        metricsService.incrementCompanyV1ResponseCount();
-                        CompanyResponse companyResponse = parseV1Response(id, body);
-                        cacheManager.put(cacheKey, companyResponse);
-                        // Set ETag and Last-Modified headers
-                        companyResponse.setETag(responseHeaders.getETag());
-                        companyResponse.setLastModified(responseHeaders.getLastModified());
-                        return companyResponse;
-                    } else if ("application/x-company-v2".equals(contentType)) {
-                        metricsService.incrementCompanyV2ResponseCount();
-                        CompanyResponse companyResponse = parseV2Response(id, body);
-                        cacheManager.put(cacheKey, companyResponse);
-                        // Set ETag and Last-Modified headers
-                        companyResponse.setETag(responseHeaders.getETag());
-                        companyResponse.setLastModified(responseHeaders.getLastModified());
-                        return companyResponse;
-                    } else {
-                        metricsService.incrementUnexpectedContentTypeCount();
-                        throw new UnexpectedContentTypeException("Unsupported backend response type");
-                    }
+                if ("application/x-company-v1".equals(contentType)) {
+                    metricsService.incrementCompanyV1ResponseCount();
+                    CompanyResponse companyResponse = parseV1Response(id, body);
+                    cacheManager.put(cacheKey, companyResponse);
+                    return companyResponse;
+                } else if ("application/x-company-v2".equals(contentType)) {
+                    metricsService.incrementCompanyV2ResponseCount();
+                    CompanyResponse companyResponse = parseV2Response(id, body);
+                    cacheManager.put(cacheKey, companyResponse);
+                    return companyResponse;
+                } else {
+                    metricsService.incrementUnexpectedContentTypeCount();
+                    throw new UnexpectedContentTypeException("Unsupported backend response type");
                 }
-                throw new IllegalStateException("Content Type is null");
-            } else{
-                throw new UnexpectedContentTypeException("Unexpected response status: " + response.getStatusCode());
             }
+                throw new IllegalStateException("Content Type is null");
         } catch (HttpClientErrorException.NotFound e) {
             throw new CompanyNotFoundException("Company not found");
         } catch (HttpServerErrorException e) {
